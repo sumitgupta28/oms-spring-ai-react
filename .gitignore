@@ -1,0 +1,15 @@
+.gradle/
+build/
+out/
+*.class
+*.jar
+!gradle/wrapper/gradle-wrapper.jar
+.idea/
+*.iml
+*.iws
+.DS_Store
+node_modules/
+react-ui/dist/
+react-ui/.env.local
+.env
+*.log

@@ -1,0 +1,8 @@
+ Help me to generate a production grade order managmenet System. this order management system will be build using Gradle, Spring   
+  Boot, Java 21 , gradle-8.14.3 , lombok for slf4j logging , postgres as database , key cloak to manange login credential. this     
+  will be multimodule mono repo contain product service - responsible for managing product and inventory , order service to manage  
+  the order , payment service to manage payment , notification service to manage notification. for backend use saga choreography    
+  pattern to manage the order processing flow . kafka used for communicating between the service. UI will be generated using react  
+  tail wind. use - https://block-tailwindcss.netlify.app/ as refrence for UI theam and structure. lets start interview on this and  
+  finish the desing first /artifects.
+  

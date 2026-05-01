@@ -1,0 +1,68 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api-gateway
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://${KEYCLOAK_HOST:localhost}:8180/realms/oms-realm
+  cloud:
+    gateway:
+      routes:
+        - id: product-service
+          uri: http://${PRODUCT_SERVICE_HOST:localhost}:8084
+          predicates:
+            - Path=/api/products/**, /api/inventory/**
+          filters:
+            - TokenRelay=
+
+        - id: order-service
+          uri: http://${ORDER_SERVICE_HOST:localhost}:8081
+          predicates:
+            - Path=/api/orders/**
+          filters:
+            - TokenRelay=
+
+        - id: payment-service
+          uri: http://${PAYMENT_SERVICE_HOST:localhost}:8082
+          predicates:
+            - Path=/api/payments/**
+          filters:
+            - TokenRelay=
+
+      default-filters:
+        - DedupeResponseHeader=Access-Control-Allow-Credentials Access-Control-Allow-Origin
+
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowedOriginPatterns:
+              - "http://localhost:3000"
+              - "http://localhost:8080"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+              - PATCH
+            allowedHeaders: "*"
+            allowCredentials: true
+            maxAge: 3600
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always
+
+logging:
+  level:
+    org.springframework.cloud.gateway: INFO
+    com.oms.gateway: DEBUG

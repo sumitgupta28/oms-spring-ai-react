@@ -1,0 +1,96 @@
+{
+  "realm": "oms-realm",
+  "enabled": true,
+  "sslRequired": "none",
+  "registrationAllowed": true,
+  "loginWithEmailAllowed": true,
+  "duplicateEmailsAllowed": false,
+  "resetPasswordAllowed": true,
+  "roles": {
+    "realm": [
+      { "name": "ROLE_ADMIN",    "description": "Full system access" },
+      { "name": "ROLE_CUSTOMER", "description": "Browse products and place orders" },
+      { "name": "ROLE_VENDOR",   "description": "Manage own products and inventory" },
+      { "name": "ROLE_SUPPORT",  "description": "View orders and handle support requests" }
+    ]
+  },
+  "clients": [
+    {
+      "clientId": "oms-client",
+      "name": "OMS Web Client",
+      "enabled": true,
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": false,
+      "attributes": {
+        "pkce.code.challenge.method": "S256"
+      },
+      "redirectUris": [
+        "http://localhost:3000/*",
+        "http://localhost:8080/*"
+      ],
+      "webOrigins": [
+        "http://localhost:3000",
+        "http://localhost:8080"
+      ],
+      "protocolMappers": [
+        {
+          "name": "realm-roles-mapper",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-realm-role-mapper",
+          "consentRequired": false,
+          "config": {
+            "claim.name": "realm_access.roles",
+            "jsonType.label": "String",
+            "multivalued": "true",
+            "access.token.claim": "true",
+            "id.token.claim": "true",
+            "userinfo.token.claim": "true"
+          }
+        }
+      ]
+    }
+  ],
+  "users": [
+    {
+      "username": "admin",
+      "email": "admin@oms.local",
+      "firstName": "Admin",
+      "lastName": "User",
+      "enabled": true,
+      "emailVerified": true,
+      "credentials": [{ "type": "password", "value": "admin123", "temporary": false }],
+      "realmRoles": ["ROLE_ADMIN"]
+    },
+    {
+      "username": "customer1",
+      "email": "customer1@oms.local",
+      "firstName": "John",
+      "lastName": "Customer",
+      "enabled": true,
+      "emailVerified": true,
+      "credentials": [{ "type": "password", "value": "customer123", "temporary": false }],
+      "realmRoles": ["ROLE_CUSTOMER"]
+    },
+    {
+      "username": "vendor1",
+      "email": "vendor1@oms.local",
+      "firstName": "Jane",
+      "lastName": "Vendor",
+      "enabled": true,
+      "emailVerified": true,
+      "credentials": [{ "type": "password", "value": "vendor123", "temporary": false }],
+      "realmRoles": ["ROLE_VENDOR"]
+    },
+    {
+      "username": "support1",
+      "email": "support1@oms.local",
+      "firstName": "Sam",
+      "lastName": "Support",
+      "enabled": true,
+      "emailVerified": true,
+      "credentials": [{ "type": "password", "value": "support123", "temporary": false }],
+      "realmRoles": ["ROLE_SUPPORT"]
+    }
+  ]
+}

@@ -1,0 +1,212 @@
+version: '3.9'
+
+networks:
+  oms-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  kafka_data:
+
+services:
+
+  # ─── Infrastructure ──────────────────────────────────────────────────────────
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: oms-postgres
+    networks: [oms-network]
+    ports: ["5432:5432"]
+    environment:
+      POSTGRES_USER: oms_user
+      POSTGRES_PASSWORD: oms_pass
+      POSTGRES_DB: postgres
+      POSTGRES_MULTIPLE_DATABASES: oms_products,oms_orders,oms_payments,keycloak
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./infra/postgres/init-multiple-databases.sh:/docker-entrypoint-initdb.d/init-multiple-databases.sh
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U oms_user -d postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.7.1
+    container_name: oms-zookeeper
+    networks: [oms-network]
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    healthcheck:
+      test: ["CMD-SHELL", "echo ruok | nc localhost 2181"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  kafka:
+    image: confluentinc/cp-kafka:7.7.1
+    container_name: oms-kafka
+    networks: [oms-network]
+    ports: ["9094:9094"]
+    depends_on:
+      zookeeper:
+        condition: service_healthy
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT
+      KAFKA_LISTENERS: INTERNAL://0.0.0.0:9092,EXTERNAL://0.0.0.0:9094
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka:9092,EXTERNAL://localhost:9094
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+      KAFKA_LOG_RETENTION_HOURS: 168
+    volumes:
+      - kafka_data:/var/lib/kafka/data
+    healthcheck:
+      test: ["CMD", "kafka-topics", "--bootstrap-server", "localhost:9092", "--list"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    container_name: oms-kafka-ui
+    networks: [oms-network]
+    ports: ["8090:8080"]
+    depends_on:
+      kafka:
+        condition: service_healthy
+    environment:
+      KAFKA_CLUSTERS_0_NAME: oms-local
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:24.0.5
+    container_name: oms-keycloak
+    networks: [oms-network]
+    ports: ["8180:8080"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://postgres:5432/keycloak
+      KC_DB_USERNAME: oms_user
+      KC_DB_PASSWORD: oms_pass
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+      KC_HOSTNAME: localhost
+      KC_HOSTNAME_PORT: 8180
+      KC_HTTP_ENABLED: "true"
+      KC_HOSTNAME_STRICT_HTTPS: "false"
+    command: ["start-dev", "--import-realm"]
+    volumes:
+      - ./infra/keycloak/oms-realm.json:/opt/keycloak/data/import/oms-realm.json
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/health/ready || exit 1"]
+      interval: 20s
+      timeout: 10s
+      retries: 10
+      start_period: 60s
+
+  # ─── Backend Services ─────────────────────────────────────────────────────────
+
+  api-gateway:
+    build:
+      context: ./api-gateway
+      dockerfile: Dockerfile
+    container_name: oms-api-gateway
+    networks: [oms-network]
+    ports: ["8080:8080"]
+    depends_on:
+      keycloak:
+        condition: service_healthy
+    environment:
+      KEYCLOAK_HOST: keycloak
+      SPRING_PROFILES_ACTIVE: docker
+    restart: on-failure
+
+  product-service:
+    build:
+      context: ./product-service
+      dockerfile: Dockerfile
+    container_name: oms-product-service
+    networks: [oms-network]
+    ports: ["8084:8084"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      keycloak:
+        condition: service_healthy
+    environment:
+      DB_HOST: postgres
+      DB_USER: oms_user
+      DB_PASS: oms_pass
+      KAFKA_BOOTSTRAP: kafka:9092
+      KEYCLOAK_HOST: keycloak
+      SPRING_PROFILES_ACTIVE: docker
+    restart: on-failure
+
+  order-service:
+    build:
+      context: ./order-service
+      dockerfile: Dockerfile
+    container_name: oms-order-service
+    networks: [oms-network]
+    ports: ["8081:8081"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      keycloak:
+        condition: service_healthy
+    environment:
+      DB_HOST: postgres
+      DB_USER: oms_user
+      DB_PASS: oms_pass
+      KAFKA_BOOTSTRAP: kafka:9092
+      KEYCLOAK_HOST: keycloak
+      SPRING_PROFILES_ACTIVE: docker
+    restart: on-failure
+
+  payment-service:
+    build:
+      context: ./payment-service
+      dockerfile: Dockerfile
+    container_name: oms-payment-service
+    networks: [oms-network]
+    ports: ["8082:8082"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      keycloak:
+        condition: service_healthy
+    environment:
+      DB_HOST: postgres
+      DB_USER: oms_user
+      DB_PASS: oms_pass
+      KAFKA_BOOTSTRAP: kafka:9092
+      KEYCLOAK_HOST: keycloak
+      SPRING_PROFILES_ACTIVE: docker
+    restart: on-failure
+
+  # ─── Frontend ─────────────────────────────────────────────────────────────────
+
+  react-ui:
+    build:
+      context: ./react-ui
+      dockerfile: Dockerfile
+    container_name: oms-react-ui
+    networks: [oms-network]
+    ports: ["3000:80"]
+    depends_on:
+      - api-gateway
