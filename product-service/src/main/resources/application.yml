@@ -5,7 +5,7 @@ spring:
   application:
     name: product-service
   datasource:
-    url: jdbc:postgresql://${DB_HOST:localhost}:5432/oms_products
+    url: jdbc:postgresql://${DB_HOST:localhost}:5432/oms?currentSchema=products
     username: ${DB_USER:oms_user}
     password: ${DB_PASS:oms_pass}
     hikari:
@@ -19,10 +19,13 @@ spring:
     properties:
       hibernate.dialect: org.hibernate.dialect.PostgreSQLDialect
       hibernate.jdbc.time_zone: UTC
+      hibernate.default_schema: products
   flyway:
     enabled: true
     locations: classpath:db/migration
     baseline-on-migrate: true
+    schemas: products
+    default-schema: products
   kafka:
     bootstrap-servers: ${KAFKA_BOOTSTRAP:localhost:9092}
   security:
