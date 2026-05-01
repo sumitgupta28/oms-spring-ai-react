@@ -117,8 +117,8 @@ services:
 
   api-gateway:
     build:
-      context: ./api-gateway
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: api-gateway/Dockerfile
     container_name: oms-api-gateway
     networks: [oms-network]
     ports: ["8080:8080"]
@@ -132,8 +132,8 @@ services:
 
   product-service:
     build:
-      context: ./product-service
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: product-service/Dockerfile
     container_name: oms-product-service
     networks: [oms-network]
     ports: ["8084:8084"]
@@ -155,8 +155,8 @@ services:
 
   order-service:
     build:
-      context: ./order-service
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: order-service/Dockerfile
     container_name: oms-order-service
     networks: [oms-network]
     ports: ["8081:8081"]
@@ -178,8 +178,8 @@ services:
 
   payment-service:
     build:
-      context: ./payment-service
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: payment-service/Dockerfile
     container_name: oms-payment-service
     networks: [oms-network]
     ports: ["8082:8082"]

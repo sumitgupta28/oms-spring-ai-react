@@ -1,0 +1,23 @@
+# Node / React UI
+react-ui/node_modules
+react-ui/dist
+react-ui/.env*
+
+# Gradle caches and local build output (builder stage fetches its own)
+.gradle/
+build/
+*/build/
+!gradle/wrapper/gradle-wrapper.jar
+
+# IDE and OS
+.idea/
+*.iml
+.DS_Store
+**/.DS_Store
+
+# Git
+.git/
+.gitignore
+
+# Docs
+*.md
