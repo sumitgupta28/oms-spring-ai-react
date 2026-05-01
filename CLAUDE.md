@@ -62,9 +62,9 @@ Gradle multimodule monorepo. `react-ui` is excluded from Gradle (npm only).
 ```
 shared-events/          ← Pure Java library: Kafka event DTOs + enums. Compiled as JAR, depended on by all services.
 api-gateway/            ← Spring Cloud Gateway (WebFlux). Port 8080. Handles CORS, JWT validation, TokenRelay to downstream services.
-product-service/        ← Port 8084. PostgreSQL DB: oms, schema: products. Manages products + inventory.
-order-service/          ← Port 8081. PostgreSQL DB: oms, schema: orders. Saga entry point.
-payment-service/        ← Port 8082. PostgreSQL DB: oms, schema: payments. Mock payment (90% success).
+product-service/        ← Port 8084. PostgreSQL DB: oms_products. Manages products + inventory.
+order-service/          ← Port 8081. PostgreSQL DB: oms_orders. Saga entry point.
+payment-service/        ← Port 8082. PostgreSQL DB: oms_payments. Mock payment (90% success).
 react-ui/               ← Vite + React 18 + TypeScript + Tailwind. Port 3000.
 infra/                  ← keycloak/oms-realm.json (imported on startup), postgres/init-multiple-databases.sh
 ```

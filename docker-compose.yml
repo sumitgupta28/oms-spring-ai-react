@@ -20,12 +20,13 @@ services:
     environment:
       POSTGRES_USER: oms_user
       POSTGRES_PASSWORD: oms_pass
-      POSTGRES_DB: oms
+      POSTGRES_DB: postgres
+      POSTGRES_MULTIPLE_DATABASES: oms_products,oms_orders,oms_payments,keycloak
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./infra/postgres/init-multiple-databases.sh:/docker-entrypoint-initdb.d/init-multiple-databases.sh
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U oms_user -d oms"]
+      test: ["CMD-SHELL", "pg_isready -U oms_user -d postgres"]
       interval: 10s
       timeout: 5s
       retries: 5
