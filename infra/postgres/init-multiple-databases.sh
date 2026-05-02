@@ -1,10 +1,14 @@
-#!/bin/sh
+#!/bin/bash
 set -e
 
-for db in $(echo "$POSTGRES_MULTIPLE_DATABASES" | tr ',' ' '); do
-    psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" <<-EOSQL
-        CREATE DATABASE "$db";
-        GRANT ALL PRIVILEGES ON DATABASE "$db" TO "$POSTGRES_USER";
+psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-EOSQL
+  CREATE DATABASE keycloak;
+  CREATE DATABASE oms_products;
+  CREATE DATABASE oms_orders;
+  CREATE DATABASE oms_payments;
+
+  GRANT ALL PRIVILEGES ON DATABASE keycloak TO "$POSTGRES_USER";
+  GRANT ALL PRIVILEGES ON DATABASE oms_products TO "$POSTGRES_USER";
+  GRANT ALL PRIVILEGES ON DATABASE oms_orders TO "$POSTGRES_USER";
+  GRANT ALL PRIVILEGES ON DATABASE oms_payments TO "$POSTGRES_USER";
 EOSQL
-    echo "Created database: $db"
-done
