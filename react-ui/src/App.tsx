@@ -37,7 +37,7 @@ export default function App() {
               <Route
                 path="/cart"
                 element={
-                  <ProtectedRoute>
+                  <ProtectedRoute blockedRole="vendor">
                     <CartPage />
                   </ProtectedRoute>
                 }
@@ -45,7 +45,7 @@ export default function App() {
               <Route
                 path="/orders"
                 element={
-                  <ProtectedRoute>
+                  <ProtectedRoute blockedRole="vendor">
                     <OrdersPage />
                   </ProtectedRoute>
                 }
@@ -53,7 +53,7 @@ export default function App() {
               <Route
                 path="/orders/:id"
                 element={
-                  <ProtectedRoute>
+                  <ProtectedRoute blockedRole="vendor">
                     <OrderDetailPage />
                   </ProtectedRoute>
                 }

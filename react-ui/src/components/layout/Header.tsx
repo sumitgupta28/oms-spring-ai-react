@@ -28,14 +28,16 @@ export function Header() {
             >
               Catalog
             </NavLink>
-            <NavLink
-              to="/orders"
-              className={({ isActive }) =>
-                `text-sm font-medium transition-colors ${isActive ? 'text-brand-600' : 'text-gray-600 hover:text-gray-900'}`
-              }
-            >
-              My Orders
-            </NavLink>
+            {!isVendor && (
+              <NavLink
+                to="/orders"
+                className={({ isActive }) =>
+                  `text-sm font-medium transition-colors ${isActive ? 'text-brand-600' : 'text-gray-600 hover:text-gray-900'}`
+                }
+              >
+                My Orders
+              </NavLink>
+            )}
             {isAdmin && (
               <NavLink
                 to="/admin"
@@ -60,14 +62,16 @@ export function Header() {
 
           {/* Right actions */}
           <div className="flex items-center gap-3">
-            <Link to="/cart" className="relative p-2 text-gray-600 hover:text-brand-600 transition-colors">
-              <ShoppingCart className="h-5 w-5" />
-              {itemCount > 0 && (
-                <span className="absolute -top-1 -right-1 bg-brand-600 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
-                  {itemCount > 9 ? '9+' : itemCount}
-                </span>
-              )}
-            </Link>
+            {!isVendor && (
+              <Link to="/cart" className="relative p-2 text-gray-600 hover:text-brand-600 transition-colors">
+                <ShoppingCart className="h-5 w-5" />
+                {itemCount > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-brand-600 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
+                    {itemCount > 9 ? '9+' : itemCount}
+                  </span>
+                )}
+              </Link>
+            )}
 
             <div className="relative group">
               <button className="flex items-center gap-2 p-2 text-gray-600 hover:text-brand-600 transition-colors">

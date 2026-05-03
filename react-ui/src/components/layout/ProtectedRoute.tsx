@@ -6,9 +6,10 @@ import { Spinner } from '../ui/Spinner'
 interface ProtectedRouteProps {
   children: React.ReactNode
   requiredRole?: string
+  blockedRole?: string
 }
 
-export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) {
+export function ProtectedRoute({ children, requiredRole, blockedRole }: ProtectedRouteProps) {
   const { isAuthenticated, isLoading, hasRole } = useAuth()
 
   if (isLoading) return <Spinner className="py-20" />
@@ -17,7 +18,7 @@ export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) 
     return <Navigate to="/login" replace />
   }
 
-  if (requiredRole && !hasRole(requiredRole)) {
+  if ((requiredRole && !hasRole(requiredRole)) || (blockedRole && hasRole(blockedRole))) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
         <h1 className="text-2xl font-bold text-gray-900">Access Denied</h1>
