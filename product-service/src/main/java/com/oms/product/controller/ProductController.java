@@ -1,7 +1,9 @@
 package com.oms.product.controller;
 
 import com.oms.product.dto.request.CreateProductRequest;
+import com.oms.product.dto.response.ImportResultResponse;
 import com.oms.product.dto.response.ProductResponse;
+import com.oms.product.service.ProductImportService;
 import com.oms.product.service.ProductService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -13,6 +15,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.UUID;
 
@@ -22,6 +25,7 @@ import java.util.UUID;
 public class ProductController {
 
     private final ProductService productService;
+    private final ProductImportService productImportService;
 
     @GetMapping
     public Page<ProductResponse> list(
@@ -68,5 +72,14 @@ public class ProductController {
             @PageableDefault(size = 20) Pageable pageable) {
         UUID vendorId = UUID.fromString(jwt.getSubject());
         return productService.listByVendor(vendorId, pageable);
+    }
+
+    @PostMapping("/import")
+    @PreAuthorize("hasAnyRole('ADMIN', 'VENDOR')")
+    public ImportResultResponse importProducts(
+            @RequestParam("file") MultipartFile file,
+            @AuthenticationPrincipal Jwt jwt) {
+        UUID vendorId = UUID.fromString(jwt.getSubject());
+        return productImportService.importProducts(file, vendorId);
     }
 }

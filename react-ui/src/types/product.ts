@@ -30,6 +30,13 @@ export interface CreateProductRequest {
   initialQuantity: number
 }
 
+export interface ImportResult {
+  totalRows: number
+  succeeded: number
+  failed: number
+  errors: Array<{ rowNumber: number; reason: string }>
+}
+
 export interface PageResponse<T> {
   content: T[]
   totalElements: number

@@ -1,5 +1,5 @@
 import axiosInstance from './axiosInstance'
-import { CreateProductRequest, PageResponse, Product } from '../types/product'
+import { CreateProductRequest, ImportResult, PageResponse, Product } from '../types/product'
 
 export const productApi = {
   list: (params?: { category?: string; search?: string; page?: number; size?: number }) =>
@@ -22,4 +22,12 @@ export const productApi = {
 
   updateInventory: (productId: string, quantity: number) =>
     axiosInstance.put(`/api/inventory/${productId}`, { quantity }).then((r) => r.data),
+
+  importProducts: (file: File) => {
+    const form = new FormData()
+    form.append('file', file)
+    return axiosInstance.post<ImportResult>('/api/products/import', form, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    }).then((r) => r.data)
+  },
 }

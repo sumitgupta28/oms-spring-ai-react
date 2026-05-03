@@ -11,6 +11,8 @@ import { OrdersPage } from './pages/OrdersPage'
 import { OrderDetailPage } from './pages/OrderDetailPage'
 import { AdminPage } from './pages/AdminPage'
 import { VendorPage } from './pages/VendorPage'
+import { LoginPage } from './pages/LoginPage'
+import { AuthProvider } from './context/AuthContext'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -23,6 +25,7 @@ const queryClient = new QueryClient({
 
 export default function App() {
   return (
+    <AuthProvider>
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <div className="min-h-screen bg-gray-50">
@@ -71,6 +74,7 @@ export default function App() {
                   </ProtectedRoute>
                 }
               />
+              <Route path="/login" element={<LoginPage />} />
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </main>
@@ -78,5 +82,6 @@ export default function App() {
         <Toaster position="top-right" />
       </BrowserRouter>
     </QueryClientProvider>
+    </AuthProvider>
   )
 }

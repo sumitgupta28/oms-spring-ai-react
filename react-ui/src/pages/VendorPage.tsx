@@ -1,17 +1,20 @@
-import React, { useState } from 'react'
+import React, { useRef, useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Plus, Package } from 'lucide-react'
+import { Plus, Package, Upload, CheckCircle, XCircle, FileSpreadsheet } from 'lucide-react'
 import { productApi } from '../api/productApi'
 import { ProductCard } from '../components/product/ProductCard'
 import { Spinner } from '../components/ui/Spinner'
 import { Button } from '../components/ui/Button'
 import { useForm } from 'react-hook-form'
-import { CreateProductRequest } from '../types/product'
+import { CreateProductRequest, ImportResult } from '../types/product'
 import toast from 'react-hot-toast'
 
 export function VendorPage() {
   const [page, setPage] = useState(0)
   const [showForm, setShowForm] = useState(false)
+  const [importFile, setImportFile] = useState<File | null>(null)
+  const [importResult, setImportResult] = useState<ImportResult | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
   const queryClient = useQueryClient()
 
   const { data, isLoading } = useQuery({
@@ -30,6 +33,21 @@ export function VendorPage() {
       reset()
     },
     onError: () => toast.error('Failed to create product.'),
+  })
+
+  const importProducts = useMutation({
+    mutationFn: (file: File) => productApi.importProducts(file),
+    onSuccess: (result) => {
+      setImportResult(result)
+      queryClient.invalidateQueries({ queryKey: ['vendor-products'] })
+      if (result.succeeded > 0) {
+        toast.success(`${result.succeeded} product(s) imported successfully!`)
+      }
+      if (result.failed > 0) {
+        toast.error(`${result.failed} row(s) failed. See details below.`)
+      }
+    },
+    onError: () => toast.error('Import failed. Please check the file format.'),
   })
 
   return (
@@ -89,6 +107,89 @@ export function VendorPage() {
           </form>
         </div>
       )}
+
+      {/* Bulk Import */}
+      <div className="bg-white border border-gray-200 rounded-2xl p-6 mb-8">
+        <div className="flex items-center gap-2 mb-4">
+          <FileSpreadsheet className="h-5 w-5 text-brand-600" />
+          <h2 className="text-lg font-semibold text-gray-900">Bulk Import via XLS</h2>
+        </div>
+        <p className="text-sm text-gray-500 mb-4">
+          Upload an <strong>.xlsx</strong> file with columns: <code className="bg-gray-100 px-1 rounded text-xs">name · sku · price · description · category · imageUrl · initialQuantity</code>
+        </p>
+
+        <div className="flex items-center gap-3">
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".xlsx,.xls"
+            className="hidden"
+            onChange={(e) => {
+              setImportResult(null)
+              setImportFile(e.target.files?.[0] ?? null)
+            }}
+          />
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+          >
+            <Upload className="h-4 w-4" />
+            {importFile ? importFile.name : 'Choose file…'}
+          </button>
+          <Button
+            onClick={() => importFile && importProducts.mutate(importFile)}
+            disabled={!importFile || importProducts.isPending}
+            loading={importProducts.isPending}
+          >
+            Import
+          </Button>
+          {importFile && (
+            <button
+              type="button"
+              onClick={() => { setImportFile(null); setImportResult(null); if (fileInputRef.current) fileInputRef.current.value = '' }}
+              className="text-xs text-gray-400 hover:text-gray-600"
+            >
+              Clear
+            </button>
+          )}
+        </div>
+
+        {importResult && (
+          <div className="mt-5">
+            <div className="flex gap-4 mb-3">
+              <span className="flex items-center gap-1 text-sm text-green-700 bg-green-50 border border-green-200 rounded-lg px-3 py-1">
+                <CheckCircle className="h-4 w-4" /> {importResult.succeeded} imported
+              </span>
+              {importResult.failed > 0 && (
+                <span className="flex items-center gap-1 text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg px-3 py-1">
+                  <XCircle className="h-4 w-4" /> {importResult.failed} failed
+                </span>
+              )}
+            </div>
+            {importResult.errors.length > 0 && (
+              <div className="overflow-auto max-h-48 rounded-lg border border-gray-200">
+                <table className="min-w-full text-sm">
+                  <thead className="bg-gray-50 text-gray-600">
+                    <tr>
+                      <th className="px-4 py-2 text-left font-medium w-24">Row</th>
+                      <th className="px-4 py-2 text-left font-medium">Reason</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100">
+                    {importResult.errors.map((e) => (
+                      <tr key={e.rowNumber}>
+                        <td className="px-4 py-2 text-gray-500">{e.rowNumber}</td>
+                        <td className="px-4 py-2 text-red-600">{e.reason}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
 
       {isLoading ? (
         <Spinner className="py-20" />

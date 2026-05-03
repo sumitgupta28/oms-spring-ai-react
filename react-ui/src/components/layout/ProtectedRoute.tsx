@@ -1,6 +1,7 @@
 import React from 'react'
 import { Navigate } from 'react-router-dom'
 import { useAuth } from '../../hooks/useAuth'
+import { Spinner } from '../ui/Spinner'
 
 interface ProtectedRouteProps {
   children: React.ReactNode
@@ -8,7 +9,9 @@ interface ProtectedRouteProps {
 }
 
 export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) {
-  const { isAuthenticated, hasRole } = useAuth()
+  const { isAuthenticated, isLoading, hasRole } = useAuth()
+
+  if (isLoading) return <Spinner className="py-20" />
 
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />

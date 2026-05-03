@@ -13,3 +13,4 @@ react-ui/dist/
 react-ui/.env.local
 .env
 *.log
+/tools/.venv/
