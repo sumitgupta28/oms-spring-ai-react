@@ -7,6 +7,8 @@ networks:
 volumes:
   postgres_data:
   kafka_data:
+  zookeeper_data:
+  zookeeper_log:
 
 services:
 
@@ -38,11 +40,16 @@ services:
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
+      ZOOKEEPER_SYNC_LIMIT: 2
+    volumes:
+      - zookeeper_data:/var/lib/zookeeper/data
+      - zookeeper_log:/var/lib/zookeeper/log
     healthcheck:
-      test: ["CMD-SHELL", "echo ruok | nc localhost 2181"]
+      test: ["CMD-SHELL", "echo ruok | nc -w 2 localhost 2181 | grep -q imok"]
       interval: 10s
       timeout: 5s
       retries: 5
+    restart: on-failure
 
   kafka:
     image: confluentinc/cp-kafka:7.7.1
@@ -62,7 +69,10 @@ services:
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_DEFAULT_REPLICATION_FACTOR: 1
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+      KAFKA_DELETE_TOPIC_ENABLE: "true"
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
       KAFKA_LOG_RETENTION_HOURS: 168
     volumes:
       - kafka_data:/var/lib/kafka/data
@@ -71,6 +81,7 @@ services:
       interval: 15s
       timeout: 10s
       retries: 10
+    restart: on-failure
 
   kafka-ui:
     image: provectuslabs/kafka-ui:latest
@@ -83,6 +94,7 @@ services:
     environment:
       KAFKA_CLUSTERS_0_NAME: oms-local
       KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
+    restart: on-failure
 
   keycloak:
     image: quay.io/keycloak/keycloak:24.0.5
