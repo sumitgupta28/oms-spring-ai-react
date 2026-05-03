@@ -127,7 +127,14 @@ services:
         condition: service_healthy
     environment:
       KEYCLOAK_HOST: keycloak
+      KEYCLOAK_PORT: 8080
       SPRING_PROFILES_ACTIVE: docker
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO /dev/null http://localhost:8080/actuator/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
     restart: on-failure
 
   product-service:
@@ -151,6 +158,12 @@ services:
       KAFKA_BOOTSTRAP: kafka:9092
       KEYCLOAK_HOST: keycloak
       SPRING_PROFILES_ACTIVE: docker
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO /dev/null http://localhost:8084/actuator/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
     restart: on-failure
 
   order-service:
@@ -174,6 +187,12 @@ services:
       KAFKA_BOOTSTRAP: kafka:9092
       KEYCLOAK_HOST: keycloak
       SPRING_PROFILES_ACTIVE: docker
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO /dev/null http://localhost:8081/actuator/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
     restart: on-failure
 
   payment-service:
@@ -197,6 +216,12 @@ services:
       KAFKA_BOOTSTRAP: kafka:9092
       KEYCLOAK_HOST: keycloak
       SPRING_PROFILES_ACTIVE: docker
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO /dev/null http://localhost:8082/actuator/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
     restart: on-failure
 
   # ─── Frontend ─────────────────────────────────────────────────────────────────
@@ -209,4 +234,6 @@ services:
     networks: [oms-network]
     ports: ["3000:80"]
     depends_on:
-      - api-gateway
+      api-gateway:
+        condition: service_healthy
+    restart: on-failure
