@@ -2,6 +2,7 @@ package com.oms.product.service;
 
 import com.oms.product.dto.request.CreateProductRequest;
 import com.oms.product.dto.response.ImportResultResponse;
+import com.oms.product.exception.InvalidFileFormatException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.ss.usermodel.*;
@@ -50,7 +51,7 @@ public class ProductImportService {
                 }
             }
         } catch (IOException e) {
-            throw new RuntimeException("Failed to parse XLS file: " + e.getMessage(), e);
+            throw new InvalidFileFormatException("Failed to parse file: " + e.getMessage(), e);
         }
 
         return ImportResultResponse.builder()

@@ -11,6 +11,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -76,10 +77,12 @@ public class ProductController {
 
     @PostMapping("/import")
     @PreAuthorize("hasAnyRole('ADMIN', 'VENDOR')")
-    public ImportResultResponse importProducts(
+    public ResponseEntity<ImportResultResponse> importProducts(
             @RequestParam("file") MultipartFile file,
             @AuthenticationPrincipal Jwt jwt) {
         UUID vendorId = UUID.fromString(jwt.getSubject());
-        return productImportService.importProducts(file, vendorId);
+        ImportResultResponse result = productImportService.importProducts(file, vendorId);
+        HttpStatus status = result.getFailed() > 0 ? HttpStatus.MULTI_STATUS : HttpStatus.OK;
+        return ResponseEntity.status(status).body(result);
     }
 }

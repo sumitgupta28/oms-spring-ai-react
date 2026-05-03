@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { ShoppingBag, Eye, EyeOff } from 'lucide-react'
@@ -18,10 +18,11 @@ export function LoginPage() {
 
   const { register, handleSubmit, formState: { errors } } = useForm<LoginForm>()
 
-  if (isAuthenticated) {
-    navigate('/', { replace: true })
-    return null
-  }
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate('/', { replace: true })
+    }
+  }, [isAuthenticated, navigate])
 
   const onSubmit = async (data: LoginForm) => {
     setLoginError(null)

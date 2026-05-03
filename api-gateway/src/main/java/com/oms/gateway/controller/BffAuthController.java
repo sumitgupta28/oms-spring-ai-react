@@ -11,6 +11,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.server.WebSession;
@@ -36,7 +37,7 @@ public class BffAuthController {
     }
 
     @PostMapping("/login")
-    public Mono<ResponseEntity<UserInfoResponse>> login(@RequestBody LoginRequest req, WebSession session) {
+    public Mono<ResponseEntity<UserInfoResponse>> login(@Valid @RequestBody LoginRequest req, WebSession session) {
         MultiValueMap<String, String> form = new LinkedMultiValueMap<>();
         form.add("grant_type", "password");
         form.add("client_id", CLIENT_ID);
@@ -78,7 +79,7 @@ public class BffAuthController {
         String refreshToken = (String) session.getAttributes().get("refresh_token");
         return session.invalidate()
                 .then(revokeToken(refreshToken))
-                .thenReturn(ResponseEntity.<Void>ok().build());
+                .thenReturn(ResponseEntity.<Void>noContent().build());
     }
 
     private Mono<Void> revokeToken(String refreshToken) {

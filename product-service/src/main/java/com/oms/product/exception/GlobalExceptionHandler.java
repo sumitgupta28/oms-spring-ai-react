@@ -32,6 +32,12 @@ public class GlobalExceptionHandler {
         return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, detail);
     }
 
+    @ExceptionHandler(InvalidFileFormatException.class)
+    public ProblemDetail handleInvalidFile(InvalidFileFormatException ex) {
+        log.warn(ex.getMessage());
+        return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, ex.getMessage());
+    }
+
     @ExceptionHandler(Exception.class)
     public ProblemDetail handleGeneric(Exception ex) {
         log.error("Unexpected error", ex);

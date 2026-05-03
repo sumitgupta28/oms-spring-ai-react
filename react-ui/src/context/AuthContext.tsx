@@ -52,9 +52,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     login,
     logout,
     hasRole,
-    isAdmin: state.user?.roles.some((r) => r === 'ROLE_ADMIN' || r === 'admin') ?? false,
-    isVendor: state.user?.roles.some((r) => r === 'ROLE_VENDOR' || r === 'vendor') ?? false,
-    isCustomer: state.user?.roles.some((r) => r === 'ROLE_CUSTOMER' || r === 'customer') ?? false,
+    isAdmin: state.user?.roles.includes('admin') ?? false,
+    isVendor: state.user?.roles.includes('vendor') ?? false,
+    isCustomer: state.user?.roles.includes('customer') ?? false,
   }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
