@@ -2,6 +2,14 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Prerequisites
+
+- **Java 21** — `java -version` must show 21; services will not compile on earlier versions
+- **Docker Desktop** — runs PostgreSQL, Kafka, Zookeeper, Keycloak, Kafka-UI
+- **Node 18+** and npm — for `react-ui` only; not managed by Gradle
+- **jq** — required for the e2e curl scripts below (`brew install jq` on Mac)
+- **Gradle wrapper included** — no local Gradle install needed; use `./gradlew`
+
 ## Build & Run Commands
 
 ### Gradle (Java services)
@@ -141,3 +149,36 @@ Each service has its own `KafkaConfig.java` with hard-coded group ID. If you cha
 5. Add a new database name to `POSTGRES_MULTIPLE_DATABASES` in `docker-compose.yml` and `infra/postgres/init-multiple-databases.sh`.
 6. Add route to `api-gateway/src/main/resources/application.yml`.
 7. Add service block to `docker-compose.yml`.
+
+## Testing Strategy
+
+Test directories are scaffolded but empty — no tests exist yet. When writing tests:
+
+- **Java services:** JUnit 5 + Spring Boot Test (via `spring-boot-starter-test`, already in all `build.gradle` files)
+- **Kafka consumers:** `@EmbeddedKafka` from `spring-kafka-test` (already in `order-service` and `product-service` build.gradle); use `Awaitility` for async assertions, never `Thread.sleep`
+- **Service layer:** Mockito unit tests with `@ExtendWith(MockitoExtension.class)` — mock repositories, test business logic in isolation
+- **Controllers:** `@WebMvcTest` — HTTP layer only, mock service dependencies
+- **Repositories:** `@DataJpaTest` — DB queries, constraints, custom query methods
+- **React:** No test framework configured yet — add Vitest + React Testing Library before writing frontend tests
+- See `.claude/skills/test-patterns/SKILL.md` for detailed patterns, naming conventions, and code examples specific to this project
+
+## Claude Code Developer Tools
+
+Custom agents, skills, and hooks are configured under `.claude/`. They activate automatically during development.
+
+### Mermaid JS syntax
+- Always output diagrams using Mermaid JS syntax. Use Mermaid for flowcharts, sequence diagrams, and class diagrams
+
+### Skills (invoke manually or auto-loaded by subagents)
+- `/test-patterns` — OMS-specific testing conventions (Spring Boot slices, Kafka, outbox, optimistic locking)
+- `/review-standards` — code review checklist with Critical / Major / Minor severity levels covering saga, outbox, security, and API patterns
+
+### Subagents (Claude auto-delegates based on your request)
+- `test-generator` — reads a source file, chooses the correct test slice, writes JUnit 5 tests to `src/test/java/`, runs them via Gradle
+- `code-reviewer` — reviews a file or branch diff against OMS architectural patterns; reports only, never edits
+
+### Hooks (fire automatically after every file edit)
+- **PostToolUse command hook (async):** runs `./gradlew :<module>:test` or `npm run lint` for the module matching the edited file path
+- **PostToolUse agent hook:** spawns the `code-reviewer` subagent on any edited Java source file; reports Critical and Major issues only (Minor suppressed to reduce noise)
+
+See `README.md` for full usage examples and trigger phrases.
