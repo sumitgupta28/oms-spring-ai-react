@@ -61,7 +61,7 @@ export default function App() {
               <Route
                 path="/admin"
                 element={
-                  <ProtectedRoute requiredRole="ROLE_ADMIN">
+                  <ProtectedRoute requiredRole="admin">
                     <AdminPage />
                   </ProtectedRoute>
                 }
@@ -69,7 +69,7 @@ export default function App() {
               <Route
                 path="/vendor"
                 element={
-                  <ProtectedRoute requiredRole="ROLE_VENDOR">
+                  <ProtectedRoute requiredRole="vendor">
                     <VendorPage />
                   </ProtectedRoute>
                 }
