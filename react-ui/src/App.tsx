@@ -35,7 +35,7 @@ function AppShell() {
           <Route
             path="/"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute blockedRole="vendor">
                 <CatalogPage />
               </ProtectedRoute>
             }
@@ -43,7 +43,7 @@ function AppShell() {
           <Route
             path="/products/:id"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute blockedRole="vendor">
                 <ProductDetailPage />
               </ProtectedRoute>
             }

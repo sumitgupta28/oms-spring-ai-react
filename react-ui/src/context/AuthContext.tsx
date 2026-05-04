@@ -44,7 +44,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const hasRole = useCallback((role: string) => {
     const roles = state.user?.roles ?? []
-    return roles.includes(role) || roles.includes(`ROLE_${role}`)
+    const normalized = role.replace(/^ROLE_/i, '').toUpperCase()
+    return roles.some(r => r.replace(/^ROLE_/i, '').toUpperCase() === normalized)
   }, [state.user])
 
   const value: AuthContextValue = {
@@ -52,9 +53,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     login,
     logout,
     hasRole,
-    isAdmin: state.user?.roles.includes('admin') ?? false,
-    isVendor: state.user?.roles.includes('vendor') ?? false,
-    isCustomer: state.user?.roles.includes('customer') ?? false,
+    isAdmin: hasRole('admin'),
+    isVendor: hasRole('vendor'),
+    isCustomer: hasRole('customer'),
   }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
