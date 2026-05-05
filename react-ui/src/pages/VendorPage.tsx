@@ -2,8 +2,8 @@ import React, { useRef, useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Plus, Package, Upload, CheckCircle, XCircle, FileSpreadsheet } from 'lucide-react'
 import { productApi } from '../api/productApi'
-import { ProductCard } from '../components/product/ProductCard'
 import { Spinner } from '../components/ui/Spinner'
+import { formatCurrency } from '../utils/formatCurrency'
 import { Button } from '../components/ui/Button'
 import { useForm } from 'react-hook-form'
 import { CreateProductRequest, ImportResult } from '../types/product'
@@ -191,16 +191,73 @@ export function VendorPage() {
         )}
       </div>
 
-      {isLoading ? (
-        <Spinner className="py-20" />
-      ) : !data?.content.length ? (
-        <div className="text-center py-20">
-          <Package className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-          <p className="text-gray-500">No products yet. Create your first listing!</p>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {data.content.map((p) => <ProductCard key={p.id} product={p} />)}
+      {/* Product table */}
+      <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden">
+        <table className="min-w-full text-sm">
+          <thead className="bg-gray-50 border-b border-gray-200">
+            <tr>
+              <th className="px-6 py-3 text-left font-medium text-gray-600">Product</th>
+              <th className="px-6 py-3 text-left font-medium text-gray-600">SKU</th>
+              <th className="px-6 py-3 text-left font-medium text-gray-600">Category</th>
+              <th className="px-6 py-3 text-right font-medium text-gray-600">Price</th>
+              <th className="px-6 py-3 text-right font-medium text-gray-600">Stock</th>
+              <th className="px-6 py-3 text-center font-medium text-gray-600">Status</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-100">
+            {isLoading ? (
+              <tr>
+                <td colSpan={6} className="py-16 text-center">
+                  <Spinner />
+                </td>
+              </tr>
+            ) : !data?.content.length ? (
+              <tr>
+                <td colSpan={6} className="py-16 text-center text-gray-500">
+                  <Package className="h-10 w-10 text-gray-300 mx-auto mb-3" />
+                  No products yet. Create your first listing!
+                </td>
+              </tr>
+            ) : (
+              data.content.map((p) => (
+                <tr key={p.id} className="hover:bg-gray-50 transition-colors">
+                  <td className="px-6 py-4 font-medium text-gray-900">{p.name}</td>
+                  <td className="px-6 py-4 text-gray-500 font-mono text-xs">{p.sku}</td>
+                  <td className="px-6 py-4 text-gray-600">{p.category ?? '—'}</td>
+                  <td className="px-6 py-4 text-right text-gray-900">{formatCurrency(p.price)}</td>
+                  <td className="px-6 py-4 text-right text-gray-600">{p.availableQuantity}</td>
+                  <td className="px-6 py-4 text-center">
+                    {p.active ? (
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Active</span>
+                    ) : (
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-500">Inactive</span>
+                    )}
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Pagination */}
+      {data && data.totalPages > 1 && (
+        <div className="flex items-center justify-between mt-4">
+          <button
+            onClick={() => setPage((p) => Math.max(0, p - 1))}
+            disabled={page === 0}
+            className="px-4 py-2 text-sm border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            Previous
+          </button>
+          <span className="text-sm text-gray-500">Page {page + 1} of {data.totalPages}</span>
+          <button
+            onClick={() => setPage((p) => Math.min(data.totalPages - 1, p + 1))}
+            disabled={page >= data.totalPages - 1}
+            className="px-4 py-2 text-sm border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            Next
+          </button>
         </div>
       )}
     </div>

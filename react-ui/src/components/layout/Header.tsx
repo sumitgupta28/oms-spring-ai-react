@@ -49,16 +49,6 @@ export function Header() {
                   Admin
                 </NavLink>
               )}
-              {isVendor && (
-                <NavLink
-                  to="/vendor"
-                  className={({ isActive }) =>
-                    `text-sm font-medium transition-colors ${isActive ? 'text-brand-600' : 'text-gray-600 hover:text-gray-900'}`
-                  }
-                >
-                  My Products
-                </NavLink>
-              )}
             </nav>
           )}
 
