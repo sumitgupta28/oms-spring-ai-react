@@ -117,6 +117,7 @@ services:
       KC_HOSTNAME_PORT: 8180
       KC_HTTP_ENABLED: "true"
       KC_HOSTNAME_STRICT_HTTPS: "false"
+      KC_HOSTNAME_BACKCHANNEL_DYNAMIC: "true"
     command: ["start-dev", "--import-realm"]
     volumes:
       - ./infra/keycloak/oms-realm.json:/opt/keycloak/data/import/oms-realm.json
@@ -171,6 +172,7 @@ services:
       DB_PASS: oms_pass
       KAFKA_BOOTSTRAP: kafka:9092
       KEYCLOAK_HOST: keycloak
+      KEYCLOAK_PORT: 8080
       SPRING_PROFILES_ACTIVE: docker
     healthcheck:
       test: ["CMD-SHELL", "wget -qO /dev/null http://localhost:8084/actuator/health || exit 1"]
@@ -200,6 +202,7 @@ services:
       DB_PASS: oms_pass
       KAFKA_BOOTSTRAP: kafka:9092
       KEYCLOAK_HOST: keycloak
+      KEYCLOAK_PORT: 8080
       SPRING_PROFILES_ACTIVE: docker
     healthcheck:
       test: ["CMD-SHELL", "wget -qO /dev/null http://localhost:8081/actuator/health || exit 1"]
@@ -229,6 +232,7 @@ services:
       DB_PASS: oms_pass
       KAFKA_BOOTSTRAP: kafka:9092
       KEYCLOAK_HOST: keycloak
+      KEYCLOAK_PORT: 8080
       SPRING_PROFILES_ACTIVE: docker
     healthcheck:
       test: ["CMD-SHELL", "wget -qO /dev/null http://localhost:8082/actuator/health || exit 1"]
