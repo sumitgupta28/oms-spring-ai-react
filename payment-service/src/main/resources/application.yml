@@ -29,7 +29,8 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: http://${KEYCLOAK_HOST:localhost}:${KEYCLOAK_PORT:8180}/realms/oms-realm
+          issuer-uri: http://localhost:8180/realms/oms-realm
+          jwk-set-uri: http://${KEYCLOAK_HOST:localhost}:${KEYCLOAK_PORT:8180}/realms/oms-realm/protocol/openid-connect/certs
 
 springdoc:
   api-docs:
