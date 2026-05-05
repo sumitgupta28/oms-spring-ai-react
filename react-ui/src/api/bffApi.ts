@@ -1,8 +1,6 @@
 import axios from 'axios'
 
-const BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080'
-
-const bffHttp = axios.create({ baseURL: BASE, withCredentials: true })
+const bffHttp = axios.create({ withCredentials: true })
 
 export interface UserInfo {
   id: string

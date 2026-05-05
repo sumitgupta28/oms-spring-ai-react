@@ -2,7 +2,6 @@ import axios from 'axios'
 import { bffApi } from './bffApi'
 
 const axiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080',
   headers: { 'Content-Type': 'application/json' },
   withCredentials: true,
 })
