@@ -9,8 +9,15 @@ interface LoginForm {
   password: string
 }
 
+function roleDestination(roles: string[]): string {
+  const normalized = roles.map(r => r.replace(/^ROLE_/i, '').toUpperCase())
+  if (normalized.includes('VENDOR')) return '/vendor'
+  if (normalized.includes('ADMIN')) return '/admin'
+  return '/'
+}
+
 export function LoginPage() {
-  const { isAuthenticated, login } = useAuth()
+  const { isAuthenticated, isVendor, isAdmin, login } = useAuth()
   const navigate = useNavigate()
   const [showPassword, setShowPassword] = useState(false)
   const [loginError, setLoginError] = useState<string | null>(null)
@@ -20,16 +27,17 @@ export function LoginPage() {
 
   useEffect(() => {
     if (isAuthenticated) {
-      navigate('/', { replace: true })
+      const dest = isVendor ? '/vendor' : isAdmin ? '/admin' : '/'
+      navigate(dest, { replace: true })
     }
-  }, [isAuthenticated, navigate])
+  }, [isAuthenticated, isVendor, isAdmin, navigate])
 
   const onSubmit = async (data: LoginForm) => {
     setLoginError(null)
     setLoading(true)
     try {
-      await login(data.username, data.password)
-      navigate('/', { replace: true })
+      const user = await login(data.username, data.password)
+      navigate(roleDestination(user.roles), { replace: true })
     } catch (err: unknown) {
       const status = (err as { response?: { status?: number } })?.response?.status
       setLoginError(status === 401 ? 'Invalid username or password.' : 'Login failed. Please try again.')

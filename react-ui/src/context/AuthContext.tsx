@@ -8,7 +8,7 @@ interface AuthState {
 }
 
 interface AuthContextValue extends AuthState {
-  login: (username: string, password: string) => Promise<void>
+  login: (username: string, password: string) => Promise<UserInfo>
   logout: () => Promise<void>
   hasRole: (role: string) => boolean
   isAdmin: boolean
@@ -34,6 +34,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const login = useCallback(async (username: string, password: string) => {
     const user = await bffApi.login(username, password)
     setState({ user, isAuthenticated: true, isLoading: false })
+    return user
   }, [])
 
   const logout = useCallback(async () => {

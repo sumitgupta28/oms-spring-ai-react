@@ -1,4 +1,5 @@
 import axios from 'axios'
+import { bffApi } from './bffApi'
 
 const axiosInstance = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080',
@@ -8,8 +9,9 @@ const axiosInstance = axios.create({
 
 axiosInstance.interceptors.response.use(
   (res) => res,
-  (err) => {
+  async (err) => {
     if (err.response?.status === 401) {
+      await bffApi.logout()
       window.location.replace('/login')
     }
     return Promise.reject(err)
