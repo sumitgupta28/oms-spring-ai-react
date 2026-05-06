@@ -2,10 +2,20 @@
   "realm": "oms-realm",
   "enabled": true,
   "sslRequired": "none",
-  "registrationAllowed": true,
+  "registrationAllowed": false,
   "loginWithEmailAllowed": true,
   "duplicateEmailsAllowed": false,
   "resetPasswordAllowed": true,
+  "verifyEmail": false,
+  "passwordPolicy": "length(8) and digits(1)",
+  "smtpServer": {
+    "host": "mailhog",
+    "port": "1025",
+    "from": "noreply@oms.local",
+    "fromDisplayName": "OMS Store",
+    "ssl": "false",
+    "starttls": "false"
+  },
   "roles": {
     "realm": [
       { "name": "ROLE_ADMIN",    "description": "Full system access" },
@@ -49,6 +59,17 @@
           }
         }
       ]
+    },
+    {
+      "clientId": "oms-client-admin",
+      "name": "OMS Admin Service Client",
+      "enabled": true,
+      "publicClient": false,
+      "serviceAccountsEnabled": true,
+      "standardFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "secret": "admin-secret",
+      "authorizationServicesEnabled": false
     }
   ],
   "users": [
@@ -91,6 +112,16 @@
       "emailVerified": true,
       "credentials": [{ "type": "password", "value": "support123", "temporary": false }],
       "realmRoles": ["ROLE_SUPPORT"]
+    },
+    {
+      "username": "service-account-oms-client-admin",
+      "enabled": true,
+      "emailVerified": true,
+      "serviceAccountClientId": "oms-client-admin",
+      "realmRoles": [],
+      "clientRoles": {
+        "realm-management": ["manage-users", "view-users", "query-users", "manage-realm", "query-realms"]
+      }
     }
   ]
 }

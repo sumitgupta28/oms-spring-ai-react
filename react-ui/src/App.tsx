@@ -12,6 +12,10 @@ import { OrderDetailPage } from './pages/OrderDetailPage'
 import { AdminPage } from './pages/AdminPage'
 import { VendorPage } from './pages/VendorPage'
 import { LoginPage } from './pages/LoginPage'
+import { RegisterPage } from './pages/RegisterPage'
+import { ForgotPasswordPage } from './pages/ForgotPasswordPage'
+import { ProfilePage } from './pages/ProfilePage'
+import { UserManagementPage } from './pages/admin/UserManagementPage'
 import { AuthProvider } from './context/AuthContext'
 
 const queryClient = new QueryClient({
@@ -25,11 +29,12 @@ const queryClient = new QueryClient({
 
 function AppShell() {
   const location = useLocation()
-  const isLoginPage = location.pathname === '/login'
+  const publicPaths = ['/login', '/register', '/forgot-password']
+  const isPublicPage = publicPaths.includes(location.pathname)
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {!isLoginPage && <Header />}
+      {!isPublicPage && <Header />}
       <main>
         <Routes>
           <Route
@@ -89,6 +94,24 @@ function AppShell() {
             }
           />
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+          <Route
+            path="/profile"
+            element={
+              <ProtectedRoute>
+                <ProfilePage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/users"
+            element={
+              <ProtectedRoute requiredRole="admin">
+                <UserManagementPage />
+              </ProtectedRoute>
+            }
+          />
           <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>
       </main>

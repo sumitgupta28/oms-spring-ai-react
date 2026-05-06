@@ -1,35 +1,87 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Minus, Plus, Trash2, ShoppingBag } from 'lucide-react'
-import { useMutation } from '@tanstack/react-query'
+import { Minus, Plus, Trash2, ShoppingBag, MapPin, CreditCard } from 'lucide-react'
+import { useMutation, useQuery } from '@tanstack/react-query'
 import { useCartStore } from '../store/cartStore'
 import { orderApi } from '../api/orderApi'
+import { userApi, AddressResponse, PaymentMethodResponse } from '../api/userApi'
 import { formatCurrency } from '../utils/formatCurrency'
 import { Button } from '../components/ui/Button'
+import { useAuth } from '../hooks/useAuth'
 import toast from 'react-hot-toast'
 import { useForm } from 'react-hook-form'
 
 interface CheckoutForm {
   shippingAddress: string
+  saveAddress: boolean
+  addressLabel: string
+  addressFullName: string
 }
 
 export function CartPage() {
   const { items, removeItem, updateQuantity, clearCart, total } = useCartStore()
+  const { isAuthenticated } = useAuth()
   const navigate = useNavigate()
   const [showCheckout, setShowCheckout] = useState(false)
-  const { register, handleSubmit, formState: { errors } } = useForm<CheckoutForm>()
+  const [selectedAddressId, setSelectedAddressId] = useState<string | 'new'>('new')
+  const [selectedPaymentId, setSelectedPaymentId] = useState<string | 'new'>('new')
+
+  const { register, handleSubmit, formState: { errors } } = useForm<CheckoutForm>({
+    defaultValues: { saveAddress: false, addressLabel: 'Home' },
+  })
+
+  const { data: savedAddresses = [] } = useQuery({
+    queryKey: ['my-addresses'],
+    queryFn: userApi.getMyAddresses,
+    enabled: isAuthenticated && showCheckout,
+  })
+
+  const { data: savedPayments = [] } = useQuery({
+    queryKey: ['my-payment-methods'],
+    queryFn: userApi.getMyPaymentMethods,
+    enabled: isAuthenticated && showCheckout,
+  })
+
+  const defaultAddress = savedAddresses.find((a) => a.isDefault) ?? savedAddresses[0]
+  const defaultPayment = savedPayments.find((p) => p.isDefault) ?? savedPayments[0]
+
+  const resolvedAddressId = selectedAddressId === 'new' ? 'new' : selectedAddressId
+  const selectedAddress = savedAddresses.find((a) => a.id === resolvedAddressId)
+
+  const formatAddress = (addr: AddressResponse): string =>
+    `${addr.fullName}, ${addr.street}, ${addr.city}, ${addr.state} ${addr.zipCode}, ${addr.country}`
 
   const placeOrder = useMutation({
-    mutationFn: (address: string) =>
-      orderApi.create({
+    mutationFn: async (data: CheckoutForm) => {
+      let shippingAddress: string
+      if (selectedAddress) {
+        shippingAddress = formatAddress(selectedAddress)
+      } else {
+        shippingAddress = data.shippingAddress
+        if (data.saveAddress && isAuthenticated) {
+          const parts = data.shippingAddress.split(',').map((s) => s.trim())
+          await userApi.addAddress({
+            label: data.addressLabel || 'Home',
+            fullName: parts[0] || 'My Address',
+            street: parts[1] || data.shippingAddress,
+            city: parts[2] || '',
+            state: parts[3] || '',
+            zipCode: parts[4] || '',
+            country: 'US',
+            isDefault: savedAddresses.length === 0,
+          }).catch(() => {/* save silently fails — don't block order */})
+        }
+      }
+      return orderApi.create({
         items: items.map((i) => ({
           productId: i.productId,
           productName: i.productName,
           quantity: i.quantity,
           unitPrice: i.unitPrice,
         })),
-        shippingAddress: address,
-      }),
+        shippingAddress,
+      })
+    },
     onSuccess: (order) => {
       clearCart()
       toast.success('Order placed successfully!')
@@ -37,6 +89,19 @@ export function CartPage() {
     },
     onError: () => toast.error('Failed to place order. Please try again.'),
   })
+
+  // Set defaults when checkout opens and saved data loads
+  React.useEffect(() => {
+    if (defaultAddress && selectedAddressId === 'new' && savedAddresses.length > 0) {
+      setSelectedAddressId(defaultAddress.id)
+    }
+  }, [defaultAddress, savedAddresses.length])
+
+  React.useEffect(() => {
+    if (defaultPayment && selectedPaymentId === 'new' && savedPayments.length > 0) {
+      setSelectedPaymentId(defaultPayment.id)
+    }
+  }, [defaultPayment, savedPayments.length])
 
   if (items.length === 0) {
     return (
@@ -100,19 +165,92 @@ export function CartPage() {
             Proceed to Checkout
           </Button>
         ) : (
-          <form onSubmit={handleSubmit((data) => placeOrder.mutate(data.shippingAddress))}>
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Shipping Address</label>
-              <textarea
-                {...register('shippingAddress', { required: 'Address is required' })}
-                rows={3}
-                placeholder="Enter your full shipping address…"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
-              />
-              {errors.shippingAddress && (
-                <p className="mt-1 text-xs text-red-500">{errors.shippingAddress.message}</p>
+          <form onSubmit={handleSubmit((data) => placeOrder.mutate(data))} className="space-y-4">
+
+            {/* Shipping Address */}
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <MapPin className="h-4 w-4 text-gray-500" />
+                <label className="text-sm font-medium text-gray-700">Shipping Address</label>
+              </div>
+
+              {savedAddresses.length > 0 ? (
+                <div className="space-y-2">
+                  {savedAddresses.map((addr) => (
+                    <label key={addr.id} className={`flex items-start gap-3 p-3 border rounded-lg cursor-pointer transition-colors ${selectedAddressId === addr.id ? 'border-brand-500 bg-brand-50' : 'border-gray-200 hover:border-gray-300'}`}>
+                      <input
+                        type="radio"
+                        name="addressChoice"
+                        value={addr.id}
+                        checked={selectedAddressId === addr.id}
+                        onChange={() => setSelectedAddressId(addr.id)}
+                        className="mt-0.5"
+                      />
+                      <div className="text-sm">
+                        <p className="font-medium text-gray-900">{addr.label} {addr.isDefault && <span className="text-xs text-brand-600">(default)</span>}</p>
+                        <p className="text-gray-600">{addr.fullName} · {addr.street}, {addr.city}, {addr.state} {addr.zipCode}</p>
+                      </div>
+                    </label>
+                  ))}
+                  <label className={`flex items-center gap-3 p-3 border rounded-lg cursor-pointer transition-colors ${selectedAddressId === 'new' ? 'border-brand-500 bg-brand-50' : 'border-gray-200 hover:border-gray-300'}`}>
+                    <input
+                      type="radio"
+                      name="addressChoice"
+                      value="new"
+                      checked={selectedAddressId === 'new'}
+                      onChange={() => setSelectedAddressId('new')}
+                    />
+                    <span className="text-sm font-medium text-gray-700">Enter a new address</span>
+                  </label>
+                </div>
+              ) : null}
+
+              {(savedAddresses.length === 0 || selectedAddressId === 'new') && (
+                <div className="mt-2 space-y-2">
+                  <textarea
+                    {...register('shippingAddress', { required: selectedAddressId === 'new' ? 'Address is required' : false })}
+                    rows={3}
+                    placeholder="Enter your full shipping address…"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
+                  />
+                  {errors.shippingAddress && <p className="text-xs text-red-500">{errors.shippingAddress.message}</p>}
+                  {isAuthenticated && (
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input type="checkbox" {...register('saveAddress')} className="rounded text-brand-600" />
+                      <span className="text-sm text-gray-600">Save this address for future orders</span>
+                    </label>
+                  )}
+                </div>
               )}
             </div>
+
+            {/* Payment Method */}
+            {savedPayments.length > 0 && (
+              <div>
+                <div className="flex items-center gap-2 mb-2">
+                  <CreditCard className="h-4 w-4 text-gray-500" />
+                  <label className="text-sm font-medium text-gray-700">Payment Method</label>
+                </div>
+                <div className="space-y-2">
+                  {savedPayments.map((pm) => (
+                    <label key={pm.id} className={`flex items-center gap-3 p-3 border rounded-lg cursor-pointer transition-colors ${selectedPaymentId === pm.id ? 'border-brand-500 bg-brand-50' : 'border-gray-200 hover:border-gray-300'}`}>
+                      <input
+                        type="radio"
+                        name="paymentChoice"
+                        value={pm.id}
+                        checked={selectedPaymentId === pm.id}
+                        onChange={() => setSelectedPaymentId(pm.id)}
+                      />
+                      <span className="text-sm text-gray-700">
+                        {pm.cardType} ···· {pm.lastFour} &nbsp;·&nbsp; Exp {String(pm.expiryMonth).padStart(2,'0')}/{pm.expiryYear}
+                        {pm.isDefault && <span className="ml-1 text-xs text-brand-600">(default)</span>}
+                      </span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <Button
               type="submit"
               variant="primary"

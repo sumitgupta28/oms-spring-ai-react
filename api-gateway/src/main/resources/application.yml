@@ -27,6 +27,11 @@ spring:
           predicates:
             - Path=/api/payments/**
 
+        - id: user-service
+          uri: http://${USER_SERVICE_HOST:localhost}:${USER_SERVICE_PORT:8085}
+          predicates:
+            - Path=/api/users/**
+
       default-filters:
         - DedupeResponseHeader=Access-Control-Allow-Credentials Access-Control-Allow-Origin
 

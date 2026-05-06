@@ -1,6 +1,6 @@
 import React from 'react'
 import { Link, NavLink } from 'react-router-dom'
-import { ShoppingCart, Package, ClipboardList, User, LogOut, Settings } from 'lucide-react'
+import { ShoppingCart, Package, User, LogOut, Users } from 'lucide-react'
 import { useCartStore } from '../../store/cartStore'
 import { useAuth } from '../../hooks/useAuth'
 
@@ -40,14 +40,25 @@ export function Header() {
                 </NavLink>
               )}
               {isAdmin && (
-                <NavLink
-                  to="/admin"
-                  className={({ isActive }) =>
-                    `text-sm font-medium transition-colors ${isActive ? 'text-brand-600' : 'text-gray-600 hover:text-gray-900'}`
-                  }
-                >
-                  Admin
-                </NavLink>
+                <>
+                  <NavLink
+                    to="/admin"
+                    className={({ isActive }) =>
+                      `text-sm font-medium transition-colors ${isActive ? 'text-brand-600' : 'text-gray-600 hover:text-gray-900'}`
+                    }
+                  >
+                    Admin
+                  </NavLink>
+                  <NavLink
+                    to="/admin/users"
+                    className={({ isActive }) =>
+                      `flex items-center gap-1 text-sm font-medium transition-colors ${isActive ? 'text-brand-600' : 'text-gray-600 hover:text-gray-900'}`
+                    }
+                  >
+                    <Users className="h-4 w-4" />
+                    Users
+                  </NavLink>
+                </>
               )}
             </nav>
           )}
@@ -72,6 +83,15 @@ export function Header() {
                   <span className="hidden sm:block text-sm font-medium">{user?.username}</span>
                 </button>
                 <div className="absolute right-0 mt-1 w-48 bg-white rounded-lg shadow-lg border border-gray-100 py-1 hidden group-hover:block">
+                  {!isVendor && (
+                    <Link
+                      to="/profile"
+                      className="w-full flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                    >
+                      <User className="h-4 w-4" />
+                      My Profile
+                    </Link>
+                  )}
                   <button
                     onClick={logout}
                     className="w-full flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { ShoppingBag, Eye, EyeOff } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
@@ -112,7 +112,20 @@ export function LoginPage() {
             </button>
           </form>
 
-          <p className="mt-6 text-xs text-center text-gray-400">
+          <div className="mt-6 space-y-2 text-center">
+            <p className="text-sm text-gray-500">
+              Don't have an account?{' '}
+              <Link to="/register" className="text-brand-600 font-medium hover:underline">
+                Create account
+              </Link>
+            </p>
+            <p className="text-sm">
+              <Link to="/forgot-password" className="text-gray-400 hover:text-brand-600 transition-colors">
+                Forgot password?
+              </Link>
+            </p>
+          </div>
+          <p className="mt-4 text-xs text-center text-gray-400">
             Secured by Keycloak · OMS v1.0
           </p>
         </div>

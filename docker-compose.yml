@@ -242,6 +242,42 @@ services:
       start_period: 40s
     restart: on-failure
 
+  user-service:
+    build:
+      context: .
+      dockerfile: user-service/Dockerfile
+    container_name: oms-user-service
+    networks: [oms-network]
+    ports: ["8085:8085"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      keycloak:
+        condition: service_healthy
+    environment:
+      DB_HOST: postgres
+      DB_USER: oms_user
+      DB_PASS: oms_pass
+      KEYCLOAK_HOST: keycloak
+      KEYCLOAK_PORT: 8080
+      KEYCLOAK_ADMIN_CLIENT_SECRET: admin-secret
+      SPRING_PROFILES_ACTIVE: docker
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO /dev/null http://localhost:8085/actuator/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
+    restart: on-failure
+
+  mailhog:
+    image: mailhog/mailhog:v1.0.1
+    container_name: oms-mailhog
+    networks: [oms-network]
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+
   # ─── Frontend ─────────────────────────────────────────────────────────────────
 
   react-ui:
