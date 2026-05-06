@@ -41,6 +41,7 @@ services:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
       ZOOKEEPER_SYNC_LIMIT: 2
+
     volumes:
       - zookeeper_data:/var/lib/zookeeper/data
       - zookeeper_log:/var/lib/zookeeper/log
@@ -73,6 +74,7 @@ services:
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_OPTS: "-Dzookeeper.4lw.commands.whitelist=*"
     networks:
       - oms-network
     restart: unless-stopped
@@ -144,6 +146,9 @@ services:
       KEYCLOAK_HOST: keycloak
       KEYCLOAK_PORT: 8080
       SPRING_PROFILES_ACTIVE: docker
+      PRODUCT_SERVICE_HOST: product-service
+      ORDER_SERVICE_HOST: order-service
+      PAYMENT_SERVICE_HOST: payment-service
     healthcheck:
       test: ["CMD-SHELL", "wget -qO /dev/null http://localhost:8080/actuator/health || exit 1"]
       interval: 15s
