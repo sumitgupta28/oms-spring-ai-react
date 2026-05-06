@@ -2,8 +2,9 @@ import React, { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft, ShoppingCart, Minus, Plus } from 'lucide-react'
-import { productApi } from '../api/productApi'
+import { publicProductApi } from '../api/productApi'
 import { useCartStore } from '../store/cartStore'
+import { useAuth } from '../hooks/useAuth'
 import { formatCurrency } from '../utils/formatCurrency'
 import { Spinner } from '../components/ui/Spinner'
 import { Button } from '../components/ui/Button'
@@ -13,11 +14,12 @@ export function ProductDetailPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const addItem = useCartStore((s) => s.addItem)
+  const { isAuthenticated } = useAuth()
   const [quantity, setQuantity] = useState(1)
 
   const { data: product, isLoading } = useQuery({
     queryKey: ['product', id],
-    queryFn: () => productApi.get(id!),
+    queryFn: () => publicProductApi.get(id!),
     enabled: !!id,
   })
 
@@ -25,6 +27,11 @@ export function ProductDetailPage() {
   if (!product) return <p className="text-center py-20 text-gray-500">Product not found.</p>
 
   const handleAddToCart = () => {
+    if (!isAuthenticated) {
+      toast.error('Please sign in to add items to your cart')
+      navigate('/login')
+      return
+    }
     addItem({
       productId: product.id,
       productName: product.name,
@@ -101,7 +108,7 @@ export function ProductDetailPage() {
             disabled={product.availableQuantity <= 0}
           >
             <ShoppingCart className="h-5 w-5" />
-            Add to Cart — {formatCurrency(product.price * quantity)}
+            {isAuthenticated ? `Add to Cart — ${formatCurrency(product.price * quantity)}` : 'Sign in to buy'}
           </Button>
         </div>
       </div>

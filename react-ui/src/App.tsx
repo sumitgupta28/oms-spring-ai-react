@@ -37,22 +37,8 @@ function AppShell() {
       {!isPublicPage && <Header />}
       <main>
         <Routes>
-          <Route
-            path="/"
-            element={
-              <ProtectedRoute blockedRole="vendor">
-                <CatalogPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/products/:id"
-            element={
-              <ProtectedRoute blockedRole="vendor">
-                <ProductDetailPage />
-              </ProtectedRoute>
-            }
-          />
+          <Route path="/" element={<CatalogPage />} />
+          <Route path="/products/:id" element={<ProductDetailPage />} />
           <Route
             path="/cart"
             element={

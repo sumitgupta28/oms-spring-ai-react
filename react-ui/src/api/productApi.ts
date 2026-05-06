@@ -1,5 +1,14 @@
+import axios from 'axios'
 import axiosInstance from './axiosInstance'
 import { CreateProductRequest, ImportResult, PageResponse, Product } from '../types/product'
+
+export const publicProductApi = {
+  list: (params?: { category?: string; search?: string; page?: number; size?: number }) =>
+    axios.get<PageResponse<Product>>('/api/products', { params }).then((r) => r.data),
+
+  get: (id: string) =>
+    axios.get<Product>(`/api/products/${id}`).then((r) => r.data),
+}
 
 export const productApi = {
   list: (params?: { category?: string; search?: string; page?: number; size?: number }) =>

@@ -1,8 +1,9 @@
 import React from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { ShoppingCart } from 'lucide-react'
 import { Product } from '../../types/product'
 import { useCartStore } from '../../store/cartStore'
+import { useAuth } from '../../hooks/useAuth'
 import { formatCurrency } from '../../utils/formatCurrency'
 import { Button } from '../ui/Button'
 import toast from 'react-hot-toast'
@@ -13,9 +14,16 @@ interface ProductCardProps {
 
 export function ProductCard({ product }: ProductCardProps) {
   const addItem = useCartStore((s) => s.addItem)
+  const { isAuthenticated } = useAuth()
+  const navigate = useNavigate()
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault()
+    if (!isAuthenticated) {
+      toast.error('Please sign in to add items to your cart')
+      navigate('/login')
+      return
+    }
     if (product.availableQuantity <= 0) return
     addItem({
       productId: product.id,
@@ -66,7 +74,7 @@ export function ProductCard({ product }: ProductCardProps) {
           disabled={product.availableQuantity <= 0}
         >
           <ShoppingCart className="h-4 w-4" />
-          Add to cart
+          {isAuthenticated ? 'Add to cart' : 'Sign in to buy'}
         </Button>
       </div>
     </Link>
